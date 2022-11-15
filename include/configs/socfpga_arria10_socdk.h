@@ -7,7 +7,7 @@
 #define __CONFIG_SOCFGPA_ARRIA10_H__
 
 #include <asm/arch/base_addr_a10.h>
-
+#include "../arch/arm/mach-socfpga/include/mach/clock_manager_arria10.h"
 #define CONFIG_SYS_BOOTM_LEN	(32 * 1024 * 1024)
 
 /*
@@ -23,6 +23,9 @@
 #define CONFIG_SYS_NS16550_MEM32
 #define CONFIG_SYS_BAUDRATE_TABLE {4800, 9600, 19200, 38400, 57600, 115200}
 #define CONFIG_SYS_NAND_U_BOOT_OFFS	0x100000
+
+#define CONFIG_SYS_NS16550_COM1		SOCFPGA_UART0_ADDRESS
+#define CONFIG_SYS_NS16550_CLK	    cm_get_l4_sp_clk_hz()
 
 /*
  * L4 OSC1 Timer 0
