@@ -10,6 +10,12 @@
 #include "../arch/arm/mach-socfpga/include/mach/clock_manager_arria10.h"
 #define CONFIG_SYS_BOOTM_LEN	(32 * 1024 * 1024)
 
+
+#define CONFIG_SILENT_CONSOLE
+#define CONFIG_SYS_DEVICE_NULLDEV
+#define CONFIG_SILENT_CONSOLE_UPDATE_ON_RELOC
+#define CONFIG_BOARD_EARLY_INIT_F 1
+
 /*
  * U-Boot general configurations
  */

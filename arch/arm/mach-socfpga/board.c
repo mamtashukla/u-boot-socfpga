@@ -22,7 +22,8 @@
 #include <log.h>
 #include <usb.h>
 #include <usb/dwc2_udc.h>
-
+#include <watchdog.h>
+#include <mach/misc.h>
 DECLARE_GLOBAL_DATA_PTR;
 
 #define DEFAULT_JTAG_USERCODE 0xFFFFFFFF
@@ -44,6 +45,103 @@ void s_init(void) {
 #endif
 }
 
+
+
+/* offsets of registers (like ALT_GPIO1_SWPORTA_DR_ADDR or
+ * ALT_NOC_L4_PRIV_FLT_L4_PRIV_SET_ADDR) are not defined correctly in hps.h, so
+ * use local definitions (prefixed with SOCFPGA_)*/
+#define SOCFPGA_ALT_GPIO1_SWPORTA_DR_ADDR 0xffc02a00
+#define SOCFPGA_ALT_GPIO1_SWPORTA_DDR_ADDR 0xffc02a04
+
+
+#define SOCFPGA_ALT_NOC_L4_PRIV_FLT_L4_PRIV_SET_ADDR 0xffd11004
+
+#define SOCFPGA_ALT_NOC_FW_H2F_SCR_LWH2F_ADDR 0xffd13500
+#define SOCFPGA_ALT_NOC_FW_H2F_SCR_H2F_ADDR 0xffd13504
+
+
+void socfpga_set_bit(u32 ereg, u32 bit)
+{
+	unsigned int tmp = readl(ereg);
+
+	tmp |= (1 << bit);
+	writel(tmp, ereg);
+}
+
+void socfpga_clr_bit(u32 ereg, u32 bit)
+{
+	unsigned int tmp = readl(ereg);
+
+	tmp &= ~(1 << bit);
+	writel(tmp, ereg);
+}
+
+/*
+ * Enable peripherals power (drive PER_PWR_xEN signal)
+ */
+void socfpga_ena_periph_pwr(void)
+{
+	socfpga_clr_bit(SOCFPGA_ALT_GPIO1_SWPORTA_DR_ADDR, 14);
+	socfpga_set_bit(SOCFPGA_ALT_GPIO1_SWPORTA_DDR_ADDR, 14);
+}
+
+/*
+ * Drive HPS_xRDY signal to let EFI know that we started
+ */
+void socfpga_signal_hps_xrdy(void)
+{
+	socfpga_clr_bit(SOCFPGA_ALT_GPIO1_SWPORTA_DR_ADDR, 19);
+	socfpga_set_bit(SOCFPGA_ALT_GPIO1_SWPORTA_DDR_ADDR, 19);
+}
+
+/*
+ * KREA specific.
+ * Configure GPIOs to enable peripheral power and drive HPS_xRDY
+ * signal to EFI.
+ */
+void socfpga_conf_krea_gpios(void)
+{
+	socfpga_ena_periph_pwr();
+	socfpga_signal_hps_xrdy();
+}
+
+/*
+ * Enable non-secure unprivileged access to lightweight and regular FPGA
+ * bridges.
+ */
+void socfpga_conf_periph_access(void)
+{
+	/* Set the priviliged bit (allow unprivileged access) for soc2fpga (bit 30)
+	 * and lwcos2fpga (bit 29). There are separate registers for setting and
+	 * clearing bits in l4_priv, so there's no need to read the current value
+	 * first . */
+	unsigned int val = (1 << 29) | (1 << 30);
+	writel(val, SOCFPGA_ALT_NOC_L4_PRIV_FLT_L4_PRIV_SET_ADDR);
+
+	/* Set bit 0 (mpu_m0) in lwsoc2fpga and soc2fpga security configuration
+	 * registers to enable non-secure accesses. */
+	socfpga_set_bit(SOCFPGA_ALT_NOC_FW_H2F_SCR_LWH2F_ADDR, 0);
+	socfpga_set_bit(SOCFPGA_ALT_NOC_FW_H2F_SCR_H2F_ADDR, 0);
+}
+
+/*
+ * Initialization function which happen at early stage of c code
+ */
+#ifdef  CONFIG_BOARD_EARLY_INIT_F
+int board_early_init_f(void)
+{
+	gd->flags |= (GD_FLG_SILENT | GD_FLG_DISABLE_CONSOLE);
+
+	WATCHDOG_RESET();
+
+	/* Turn on peripherals power (in case FPGA was loaded from external source,
+	 * we have to do it now to enable UART0) and HPS ready signal to EFI */
+	socfpga_conf_krea_gpios();
+
+	return 0;
+}
+
+#endif
 /*
  * Miscellaneous platform dependent initialisations
  */
