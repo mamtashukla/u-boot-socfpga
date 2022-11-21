@@ -10,7 +10,7 @@
 
 	aliases {
 		ethernet0 = &gmac0;
-		serial0 = &uart1;
+		serial0 = &uart0;
 	};
 
 	chosen {
@@ -162,6 +162,10 @@
 		compatible = "ltc2977";
 		reg = <0x5c>;
 	};
+};
+
+&uart0 {
+    status = "okay";
 };
 
 &uart1 {
