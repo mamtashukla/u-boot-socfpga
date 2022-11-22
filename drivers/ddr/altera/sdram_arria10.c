@@ -42,7 +42,7 @@ static u64 sdram_size_calc(void);
 #define DDR_REG_SEQ2CORE        0xFFD0507C
 #define DDR_REG_CORE2SEQ        0xFFD05078
 #define DDR_READ_LATENCY_DELAY	40
-#define DDR_SIZE_2GB_HEX	0x80000000
+#define DDR_SIZE_3GB_HEX	0xC0000000
 
 #define IO48_MMR_DRAMSTS	0xFFCFA0EC
 #define IO48_MMR_NIOS2_RESERVE0	0xFFCFA110
@@ -693,6 +693,9 @@ int ddr_calibration_sequence(void)
 	/* assigning the SDRAM size */
 	u64 size = sdram_size_calc();
 
+	puts("DDR_SZ: ");
+	print_size(size, "\n");
+
 	/*
 	 * If size is less than zero, this is invalid/weird value from
 	 * calculation, use default Config size.
@@ -700,8 +703,8 @@ int ddr_calibration_sequence(void)
 	 */
 	if (size <= 0)
 		gd->ram_size = PHYS_SDRAM_1_SIZE;
-	else if (DDR_SIZE_2GB_HEX <= size)
-		gd->ram_size = DDR_SIZE_2GB_HEX;
+	else if (DDR_SIZE_3GB_HEX <= size)
+		gd->ram_size = DDR_SIZE_3GB_HEX;
 	else
 		gd->ram_size = (u32)size;
 
