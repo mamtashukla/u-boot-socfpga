@@ -923,9 +923,13 @@ int console_announce_r(void)
 /* Called before relocation - use serial functions */
 int console_init_f(void)
 {
-	gd->have_console = 1;
+	
+	if(gd->uart_ready_for_console) {
+		gd->have_console = 1;
+	}
 
-	console_update_silent();
+	gd->have_console = 1;
+	//console_update_silent();
 
 	print_pre_console_buffer(PRE_CONSOLE_FLUSHPOINT1_SERIAL);
 

@@ -36,6 +36,28 @@ static void serial_null(void)
 {
 }
 
+
+static int uart_console_null(void)
+{
+	return 1;
+}
+
+#define uart_console_func(name)					\
+	int name(const void *blob)						\
+		__attribute__((weak, alias("uart_console_null")));
+
+uart_console_func(is_default_uart_console_true);
+
+
+int is_uart_console_true(const void *blob)
+{
+	int ret = 0;
+	
+	ret |= is_default_uart_console_true(blob);
+	
+	return ret;
+}
+
 /**
  * on_baudrate() - Update the actual baudrate when the env var changes
  *
@@ -355,8 +377,19 @@ static struct serial_device *get_current(void)
  */
 int serial_init(void)
 {
-	gd->flags |= GD_FLG_SERIAL_READY;
-	return get_current()->start();
+//	gd->flags |= GD_FLG_SERIAL_READY;
+//	return get_current()->start();
+
+	if(is_uart_console_true(gd->fdt_blob))
+		gd->uart_ready_for_console = 1;
+	else
+		gd->uart_ready_for_console = 0;
+
+	if(gd->uart_ready_for_console) {
+		gd->flags |= GD_FLG_SERIAL_READY;
+		return get_current()->start();
+	}
+
 }
 
 /**

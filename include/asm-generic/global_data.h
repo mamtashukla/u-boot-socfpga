@@ -110,6 +110,7 @@ struct global_data {
 	 * A value of 0 indicates that console input and output drivers shall
 	 * not be called.
 	 */
+	unsigned long uart_ready_for_console;
 	unsigned long have_console;
 #if CONFIG_IS_ENABLED(PRE_CONSOLE_BUFFER)
 	/**

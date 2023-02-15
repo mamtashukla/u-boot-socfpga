@@ -871,21 +871,23 @@ void board_init_r(gd_t *dummy1, ulong dummy2)
  */
 void preloader_console_init(void)
 {
-#ifdef CONFIG_SPL_SERIAL
+
 	gd->baudrate = CONFIG_BAUDRATE;
 
 	serial_init();		/* serial communications setup */
 
-	gd->have_console = 1;
+    if(gd->uart_ready_for_console)
+		gd->have_console = 1;
+	else
+		gd->have_console = 1;
 
-#if CONFIG_IS_ENABLED(BANNER_PRINT)
 	puts("\nU-Boot " SPL_TPL_NAME " " PLAIN_VERSION " (" U_BOOT_DATE " - "
 	     U_BOOT_TIME " " U_BOOT_TZ ")\n");
-#endif
+
 #ifdef CONFIG_SPL_DISPLAY_PRINT
 	spl_display_print();
 #endif
-#endif
+
 }
 
 /**

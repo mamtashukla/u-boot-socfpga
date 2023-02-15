@@ -47,6 +47,7 @@ extern void serial_stdio_init(void);
 extern int serial_assign(const char *name);
 extern void serial_reinit_all(void);
 int serial_initialize(void);
+extern int is_uart_console_true(const void *blob);
 
 /* For usbtty */
 #ifdef CONFIG_USB_TTY
